@@ -1,6 +1,6 @@
-﻿using ApiServerDemo.Models;
-using ApiServerDemo.Models.DbModels;
-using ApiServerDemo.Models.DTOs;
+﻿using ApiDemoShared.DbModels;
+using ApiDemoShared.DTOs;
+using ApiServerDemo.Models;
 using Dapper;
 using System.Data;
 
@@ -8,11 +8,11 @@ namespace ApiServerDemo.Repository
 {
     public interface IPatientRepository
     {
-        Task<IEnumerable<Patient>> GetPatients();
+        Task<IEnumerable<PatientDto>> GetPatients();
         Task<Patient> GetPatientById(string id);
         Task<Patient> CreatePatient(PatientDto patient);
-        Task UpdatePatient(string id, PatientDto patient);
-        Task DeleteCompany(string id);
+        Task UpdatePatient(PatientDto patient);
+        Task DeletePatient(string id);
     }
     public class PatientRepository : IPatientRepository
     {
@@ -22,13 +22,13 @@ namespace ApiServerDemo.Repository
         {
             this.context = context;
         }
-        public async Task<IEnumerable<Patient>> GetPatients()
+        public async Task<IEnumerable<PatientDto>> GetPatients()
         {
             var query = "SELECT * FROM Patient";
 
             using (var connection = context.CreateConnection())
             {
-                var companies = await connection.QueryAsync<Patient>(query);
+                var companies = await connection.QueryAsync<PatientDto>(query);
                 return companies.ToList();
             }
         }
@@ -73,11 +73,11 @@ namespace ApiServerDemo.Repository
                 return newPatient;
             }
         }
-        public async Task UpdatePatient(string id, PatientDto patient)
+        public async Task UpdatePatient(PatientDto patient)
         {
             var query = "UPDATE Patient SET Name = @Name, Address = @Address, Email = @Email, UpdatedOn = @UpdatedOn WHERE Id = @Id";
             var parameters = new DynamicParameters();
-            parameters.Add("Id", id, DbType.Guid);
+            parameters.Add("Id", patient.Id, DbType.Guid);
             parameters.Add("Name", patient.Name, DbType.String);
             parameters.Add("Address", patient.Address, DbType.String);
             parameters.Add("Email", patient.Email, DbType.String);
@@ -88,7 +88,7 @@ namespace ApiServerDemo.Repository
                 await connection.ExecuteAsync(query, parameters);
             }
         }
-        public async Task DeleteCompany(string id)
+        public async Task DeletePatient(string id)
         {
             var query = "DELETE FROM Patient WHERE Id = @Id";
 

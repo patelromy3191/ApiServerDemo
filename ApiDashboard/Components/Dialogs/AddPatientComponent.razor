@@ -1,0 +1,31 @@
+﻿@using ApiDashboard.Services;
+@using ApiDemoShared.DTOs;
+@using MudBlazor
+<MudDialog>
+    <DialogContent>
+        <MudTextField Value="@Patient.Id.ToString()" Label="Server ID" ReadOnly="true" />
+        <MudTextField Value="@Patient.Name" Label="Name" ReadOnly="true" />
+        <MudTextField Value="@Patient.Address" Label="Address" ReadOnly="true" />
+        <MudTextField Value="@Patient.Email" Label="Email" ReadOnly="true" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Error" OnClick="AddPatient">Delete Server</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public PatientDto Patient { get; set; }
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private void AddPatient()
+    {
+        //In a real world scenario this bool would probably be a service to delete the item from api/database
+        //Snackbar.Add("Server Deleted", Severity.Success);
+        //MudDialog.Close(DialogResult.Ok(pat.Id));
+    }
+}

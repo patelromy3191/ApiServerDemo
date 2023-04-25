@@ -1,6 +1,6 @@
-﻿using ApiServerDemo.Models.DbModels;
-using ApiServerDemo.Models.DTOs;
+﻿using ApiDemoShared.DTOs;
 using ApiServerDemo.Repository;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApiServerDemo.Controllers
@@ -15,7 +15,7 @@ namespace ApiServerDemo.Controllers
         {
             this.patientRepo = patientRepo;
         }
-        [HttpGet]
+        [HttpGet("GetPatients")]
         public async Task<IActionResult> GetPatients()
         {
             try
@@ -51,6 +51,8 @@ namespace ApiServerDemo.Controllers
         [HttpPost]
         public async Task<IActionResult> CreatePatient(PatientDto patient)
         {
+            if (patient == null)
+                return StatusCode(452, "No Parameter Found");
             try
             {
                 var createdCompany = await patientRepo.CreatePatient(patient);
@@ -62,16 +64,14 @@ namespace ApiServerDemo.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateCompany(string id, PatientDto patientDto)
+        [HttpPut("UpdatePatient")]
+        public async Task<IActionResult> UpdatePatient(PatientDto patientDto)
         {
+            if (patientDto == null)
+                return StatusCode(452, "No Parameter Found");
             try
             {
-                var patient = await patientRepo.GetPatientById(id);
-                if (patient == null)
-                    return NotFound();
-
-                await patientRepo.UpdatePatient(id, patientDto);
+                await patientRepo.UpdatePatient(patientDto);
                 return NoContent();
             }
             catch (Exception ex)
@@ -80,16 +80,18 @@ namespace ApiServerDemo.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteCompany(string id)
+        [HttpDelete("DeletePatient")]
+        public async Task<IActionResult> DeletePatient(PatientDto patientDt)
         {
             try
             {
-                var dbCompany = await patientRepo.GetPatientById(id);
+                if (patientDt == null)
+                    return StatusCode(452, "No Parameter Found");
+                var dbCompany = await patientRepo.GetPatientById(patientDt.Id.ToString());
                 if (dbCompany == null)
                     return NotFound();
 
-                await patientRepo.DeleteCompany(id);
+                await patientRepo.DeletePatient(patientDt.Id.ToString());
                 return NoContent();
             }
             catch (Exception ex)
@@ -98,5 +100,6 @@ namespace ApiServerDemo.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+
     }
 }

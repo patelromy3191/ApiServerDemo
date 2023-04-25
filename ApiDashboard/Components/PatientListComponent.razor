@@ -1,0 +1,110 @@
+﻿@using ApiDashboard.Components.Dialogs;
+@using ApiDashboard.Services;
+@using ApiDemoShared.DTOs;
+@using MudBlazor
+@inject IDialogService DialogService
+
+@inject IApiServices service
+<MudButton @onclick="OpenDialog" Variant="Variant.Filled" Color="Color.Primary">Add New Patient</MudButton>
+@if (ShowPatient)
+{
+    <MudDialog IsVisible="@ShowPatient">
+        <DialogContent>
+            <MudTextField Value="@createDto.Name" Label="Name" />
+            <MudTextField Value="@createDto.Address" Label="Address" />
+            <MudTextField Value="@createDto.Email" Label="Email" Mask="@emailCustomMask" />
+        </DialogContent>
+        <DialogActions>
+            <MudButton Color="Color.Error" OnClick="AddPatient">Create Patient</MudButton>
+        </DialogActions>
+    </MudDialog>
+}
+<MudTable Items="@patientList" T="PatientDto" Dense="true" Hover="true" Bordered="true" Striped="true" Filter="new Func<PatientDto,bool>(FilterFunc1)" 
+    @bind-SelectedItem="selectedItem1" OnCommitEditClick="UpdatePatient" CanCancelEdit="true" EditTrigger="TableEditTrigger.EditButton" RowEditCancel="OnResetItemToOriginal">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Patient Data</MudText>
+        <MudSpacer />
+        <MudTextField @bind-Value="searchString1" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Name</MudTh>
+        <MudTh>Address</MudTh>
+        <MudTh>Email</MudTh>
+        <MudTh>Created On</MudTh>
+        <MudTh>Actions</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Nr">@context.Name</MudTd>
+        <MudTd DataLabel="Sign">@context.Address</MudTd>
+        <MudTd DataLabel="Name">@context.Email</MudTd>
+        <MudTd DataLabel="Position">@context.CreatedOn</MudTd>
+        <MudTd><MudIconButton Icon="@Icons.Material.Outlined.Delete" OnClick="DeletePatient"></MudIconButton></MudTd>
+    </RowTemplate>
+    <RowEditingTemplate>
+        <MudTd DataLabel="Nr">@context.Name</MudTd>
+        <MudTd DataLabel="Sign">@context.Address</MudTd>
+        <MudTd DataLabel="Name">@context.Email</MudTd>
+        <MudTd DataLabel="Position">@context.CreatedOn</MudTd>
+        <MudTd>
+            
+        </MudTd>
+    </RowEditingTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+
+@code {
+    private IList<PatientDto> patientList = null;
+    private PatientDto selectedItem1;
+    private string searchString1 = "";
+    private PatientDto createDto = new PatientDto();
+    private bool ShowPatient = false;
+    public IMask emailCustomMask = RegexMask.Email("<user>@<domain.com>");
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await service.GetPatientList();
+        if(result != null )
+            patientList = result;
+    }
+
+    private bool FilterFunc1(PatientDto element) => FilterFunc(element, searchString1);
+
+    private bool FilterFunc(PatientDto element, string searchString)
+    {
+        if ($"{element.Email} {element.Address} {element.Email}".Contains(searchString))
+            return true;
+        return false;
+    }
+    public async Task UpdatePatient()
+    {
+        if (selectedItem1 == null)
+            return;
+        var result =await service.UpdatePatient(selectedItem1);
+    }
+    private void OnResetItemToOriginal(object element)
+    {
+        var patient = (PatientDto)element;
+        StateHasChanged();
+    }
+    private void OpenDialog()
+    {
+        ShowPatient = true;
+        StateHasChanged();
+        //var options = new DialogOptions { CloseOnEscapeKey = true };
+        //DialogService.Show<AddPatientComponent>("Add Patient", options);
+    }
+    private async void AddPatient()
+    {
+        if (selectedItem1 == null)
+            return;
+        var result = await service.AddPatient(selectedItem1);
+    }
+    private async void DeletePatient()
+    {
+        if (selectedItem1 == null)
+            return;
+        var result = await service.DeletePatient(selectedItem1);
+    }
+}

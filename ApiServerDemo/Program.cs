@@ -2,6 +2,15 @@ using ApiServerDemo.Models;
 using ApiServerDemo.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+                      policy =>
+                      {
+                          policy.WithOrigins("https://localhost:7263");
+                      });
+});
 
 // Add services to the container.
 builder.Services.AddSingleton<ValleyHospitalContext>();
@@ -21,6 +30,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors(MyAllowSpecificOrigins);
 
 app.UseAuthorization();
 
