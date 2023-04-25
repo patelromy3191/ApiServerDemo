@@ -11,7 +11,7 @@ namespace ApiServerDemo.Repository
         Task<IEnumerable<Patient>> GetPatients();
         Task<Patient> GetPatientById(string id);
         Task<Patient> CreatePatient(PatientDto patient);
-        Task UpdatePatient(string id, PatientDto company);
+        Task UpdatePatient(string id, PatientDto patient);
         Task DeleteCompany(string id);
     }
     public class PatientRepository : IPatientRepository
@@ -46,18 +46,20 @@ namespace ApiServerDemo.Repository
         }
         public async Task<Patient> CreatePatient(PatientDto patient)
         {
-            var query = "INSERT INTO Companies (Name, Address, Country) VALUES (@Name, @Address, @Country)" +
-                "SELECT CAST(SCOPE_IDENTITY() as int)";
+            patient.Id = Guid.NewGuid();
+            patient.CreatedOn = DateTime.UtcNow;
+            var query = "INSERT INTO Patient (Id, Name, Address, Email, CreatedOn) VALUES (@Id,@Name, @Address, @Email,@CreatedOn)";
 
             var parameters = new DynamicParameters();
-            parameters.Add("Id", Guid.NewGuid(), DbType.String);
+            parameters.Add("Id", patient.Id, DbType.Guid);
             parameters.Add("Name", patient.Name, DbType.String);
             parameters.Add("Address", patient.Address, DbType.String);
             parameters.Add("Email", patient.Email, DbType.String);
+            parameters.Add("CreatedOn", patient.CreatedOn, DbType.String);
 
             using (var connection = context.CreateConnection())
             {
-                var id = await connection.QuerySingleAsync<int>(query, parameters);
+                var id = await connection.QueryAsync(query, parameters);
                 
                 var newPatient = new Patient
                 {
@@ -71,15 +73,15 @@ namespace ApiServerDemo.Repository
                 return newPatient;
             }
         }
-        public async Task UpdatePatient(string id, PatientDto company)
+        public async Task UpdatePatient(string id, PatientDto patient)
         {
-            var query = "UPDATE Patient SET Id = @Id, Name = @Name, Address = @Address, Email = @Email WHERE Id = @Id";
-
+            var query = "UPDATE Patient SET Name = @Name, Address = @Address, Email = @Email, UpdatedOn = @UpdatedOn WHERE Id = @Id";
             var parameters = new DynamicParameters();
-            parameters.Add("Id", id, DbType.Int32);
-            parameters.Add("Name", company.Name, DbType.String);
-            parameters.Add("Address", company.Address, DbType.String);
-            parameters.Add("Email", company.Email, DbType.String);
+            parameters.Add("Id", id, DbType.Guid);
+            parameters.Add("Name", patient.Name, DbType.String);
+            parameters.Add("Address", patient.Address, DbType.String);
+            parameters.Add("Email", patient.Email, DbType.String);
+            parameters.Add("UpdatedOn", DateTime.UtcNow, DbType.String);
 
             using (var connection = context.CreateConnection())
             {
